@@ -5,7 +5,12 @@ function createClientPromise() {
   if (!uri) {
     throw new Error("MONGODB_URI가 .env.local에 설정되어 있지 않습니다.");
   }
-  return new MongoClient(uri).connect();
+  return new MongoClient(uri).connect().catch((error) => {
+    // 실패한 Promise가 캐시에 남으면 서버를 재시작할 때까지 모든 요청이 실패하므로 비운다.
+    global._mongoClientPromise = undefined;
+    clientPromise = undefined;
+    throw error;
+  });
 }
 
 declare global {
